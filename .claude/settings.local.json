@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(conda info:*)",
+      "Bash(conda activate:*)",
+      "Bash(python:*)",
+      "Bash(pip show:*)",
+      "Read(//home/lali/Desktop/**)"
     ],
     "deny": [],
     "ask": []

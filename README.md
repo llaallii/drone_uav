@@ -13,28 +13,38 @@ Refer to `docs/plan.md` for full objectives, deliverables, and success criteria.
 
 ## Environment Setup
 
-### Prerequisites
+### Prerequisites ✅ COMPLETED
+- **Operating System:** Ubuntu 24.04 LTS (Noble Numbat)
 - **Isaac Sim 5.0.0:** Installed via pip in `env_isaaclab` conda environment (Python 3.11)
-- **ROS 2 Humble:** Required for Windows (installation instructions in `config/env/setup_instructions.md`)
-- **Windows Platform:** Development environment configured for Windows paths and workflows
+- **PyTorch 2.7.0:** With CUDA 12.8 support
+- **ROS 2 Jazzy:** Native to Ubuntu 24.04 LTS
+- **Isaac Lab:** Installed and integrated for robotics utilities and sensors
 
 ### Quick Start
 1. Activate the Isaac Lab environment:
    ```bash
    conda activate env_isaaclab
+   source /opt/ros/jazzy/setup.bash
    ```
 
 2. Verify Isaac Sim installation:
    ```bash
-   isaacsim
+   pip show isaacsim
+   isaacsim --help
    ```
 
-3. Verify Phase 1 setup:
+3. Verify ROS 2 Jazzy:
+   ```bash
+   ros2 --version
+   echo $ROS_DISTRO
+   ```
+
+4. Run Phase 1 setup verification:
    ```bash
    python scripts/setup_sim.py
    ```
 
-See `config/env/setup_instructions.md` for complete setup documentation.
+See [config/env/setup_instructions.md](config/env/setup_instructions.md) for complete setup documentation.
 
 ## Repository Layout
 - `docs/` &mdash; Planning artifacts, owner notes, and phase tracking.
@@ -48,24 +58,36 @@ See `config/env/setup_instructions.md` for complete setup documentation.
 Each directory contains a `notes.md` describing its role in the pipeline and a `todo.md` with outstanding tasks.
 
 ## Current Status
-**Phase 1 (ACTIVE):** Environment setup and configuration
-- Isaac Sim 5.0.0 installed via pip in `env_isaaclab` environment
-- Transitioning from original multi-repo Linux plan to Windows monorepo workflow
-- Implementing Isaac Lab + ROS 2 Humble integration
-- Configuring procedural scene generation with 10 scene families
-- Setting up sensor pipeline (stereo depth, IMU, odometry) at 20 Hz
+**Phase 1 (ACTIVE):** Environment setup completed, implementation in progress
 
-**Documentation Updates:**
-- `docs/plan.md` &mdash; Updated Phase 1 for Isaac Lab approach
-- `docs/phase1_checklist.md` &mdash; Phase 1 completion criteria
-- `config/env/` &mdash; Environment manifests and sensor configurations
-- `config/ros2/` &mdash; ROS 2 bridge specifications
+### Completed ✅
+- **Platform Migration:** Successfully migrated to Ubuntu 24.04 LTS
+- **Environment Setup:** Isaac Sim 5.0.0, Python 3.11, PyTorch 2.7.0, CUDA 12.8
+- **ROS 2 Jazzy:** Installed and verified on Ubuntu 24.04
+- **Isaac Lab:** Installed and integrated for sensors and robotics utilities
+- **Configuration Files:** All YAML configs created
+  - Environment manifests (`config/env/`)
+  - Sensor configurations (`config/env/sensors.yaml`)
+  - Scene families (`config/env/scenes_config.yaml`)
+  - ROS 2 bridge specifications (`config/ros2/bridge_topics.yaml`)
+- **Documentation:** Updated for Ubuntu 24.04 and ROS 2 Jazzy
+  - [docs/plan.md](docs/plan.md) — Updated Phase 1 for Isaac Lab approach
+  - [docs/phase1_checklist.md](docs/phase1_checklist.md) — Phase 1 completion criteria
+  - [config/env/setup_instructions.md](config/env/setup_instructions.md) — Complete setup guide
+  - [docs/owner_log.md](docs/owner_log.md) — Platform migration notes
+
+### In Progress
+- Isaac Lab environment wrapper implementation (`src/sim/environment.py`)
+- Scene generation scripts with randomization (10 families)
+- ROS 2 Jazzy bridge integration and testing
 
 ## Next Steps
-1. Install and configure ROS 2 Humble for Windows (see `config/env/todo.md`)
-2. Implement Isaac Lab environment wrapper in `src/sim/environment.py`
-3. Create scene generation scripts with randomization (10 families)
-4. Verify ROS 2 bridge topics: `/depth`, `/odom`, `/imu`
-5. Complete Phase 1 deliverables (see `docs/phase1_checklist.md`)
+1. Implement `IsaacSimEnvironment` class methods in `src/sim/environment.py`
+2. Create scene generation scripts:
+   - `scripts/generate_scenes.py` — Individual scene generation
+   - `scripts/batch_generate_scenes.py` — Batch scene generation
+3. Test ROS 2 Jazzy bridge with sensor topics: `/depth`, `/odom`, `/imu`
+4. Generate and validate initial test scenes (10-20 across scene families)
+5. Complete Phase 1 deliverables (see [docs/phase1_checklist.md](docs/phase1_checklist.md))
 
-Track progress in `docs/owner_log.md` for decisions, assumptions, and blockers.
+Track progress in [docs/owner_log.md](docs/owner_log.md) for decisions, assumptions, and blockers.

@@ -1,11 +1,11 @@
 # RAPID v2 Environment Setup Instructions
 
-Complete setup guide for Phase 1 environment configuration on Windows.
+Complete setup guide for Phase 1 environment configuration on Ubuntu 24.04 LTS.
 
 ## Prerequisites
 
 ### System Requirements
-- **Operating System:** Windows 10/11 (64-bit)
+- **Operating System:** Ubuntu 24.04 LTS (64-bit)
 - **GPU:** NVIDIA RTX/Tesla series (CUDA 12.8 compatible)
 - **VRAM:** Minimum 8GB (16GB recommended)
 - **RAM:** Minimum 16GB (32GB recommended)
@@ -18,7 +18,7 @@ Complete setup guide for Phase 1 environment configuration on Windows.
 
 ---
 
-## 1. Isaac Sim 5.0.0 Installation (Already Completed)
+## 1. Isaac Sim 5.0.0 Installation ✅ COMPLETED
 
 Your existing `env_isaaclab` environment already has Isaac Sim 5.0.0 installed. To verify:
 
@@ -36,7 +36,7 @@ pip show isaacsim
 
 ### Isaac Sim Installation Reference (For Documentation)
 
-If you need to recreate the environment, here are the steps that were followed:
+The environment was created with the following steps:
 
 ```bash
 # Create conda environment with Python 3.11
@@ -63,45 +63,52 @@ isaacsim
 
 ---
 
-## 2. ROS 2 Humble Installation (Required)
+## 2. ROS 2 Jazzy Installation ✅ COMPLETED
 
-ROS 2 Humble is required for the Isaac Sim ROS 2 bridge and Phase 2 planner integration.
+ROS 2 Jazzy is required for the Isaac Sim ROS 2 bridge and Phase 2 planner integration.
 
-### Installation Steps
+### Installation Verification
 
-1. **Download ROS 2 Humble for Windows:**
-   - Visit: https://docs.ros.org/en/humble/Installation/Windows-Install-Binary.html
-   - Download the latest Humble binary release
+Your system already has ROS 2 Jazzy installed. To verify:
 
-2. **Install ROS 2 Humble:**
-   - Extract the archive to `C:\dev\ros2_humble`
-   - Or your preferred location (update paths accordingly)
+```bash
+# Check ROS 2 installation
+ros2 --version
 
-3. **Set up environment variables:**
+# Expected output: ros2 cli version: jazzy
+echo $ROS_DISTRO
 
-   Create a batch file `setup_ros2.bat`:
+# Expected output: jazzy
+```
 
-   ```batch
-   @echo off
-   call C:\dev\ros2_humble\local_setup.bat
-   echo ROS 2 Humble environment loaded
+### Installation Reference (For Documentation)
+
+ROS 2 Jazzy was installed on Ubuntu 24.04 using the following steps:
+
+1. **Set up ROS 2 apt repository:**
+   ```bash
+   sudo apt update && sudo apt install -y software-properties-common
+   sudo add-apt-repository universe
+   sudo apt update && sudo apt install curl -y
+   sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
    ```
 
-4. **Verify ROS 2 installation:**
-
+2. **Install ROS 2 Jazzy:**
    ```bash
-   # Open new Command Prompt
-   call setup_ros2.bat
-   ros2 --version
-
-   # Expected output: ros2 cli version: humble
+   sudo apt update
+   sudo apt install -y ros-jazzy-desktop
    ```
 
-5. **Install additional ROS 2 packages:**
-
+3. **Install development tools:**
    ```bash
-   # With ROS 2 environment loaded
-   pip install colcon-common-extensions
+   sudo apt install -y python3-colcon-common-extensions python3-rosdep
+   ```
+
+4. **Set up ROS 2 environment:**
+   ```bash
+   echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc
+   source ~/.bashrc
    ```
 
 ### Isaac Sim ROS 2 Bridge Setup
@@ -121,30 +128,48 @@ The Isaac Sim ROS 2 bridge connects simulation topics to ROS 2:
 
 ---
 
-## 3. Isaac Lab Setup (Optional but Recommended)
+## 3. Isaac Lab Setup ✅ COMPLETED
 
-Isaac Lab provides robotics utilities, sensors, and RL tools.
+Isaac Lab provides robotics utilities, sensors, and RL tools built on top of Isaac Sim.
 
-### Installation
+### Installation Verification
+
+To verify Isaac Lab is installed in your environment:
+
+```bash
+# Activate environment
+conda activate env_isaaclab
+
+# Check if Isaac Lab is accessible
+python -c "import omni.isaac.lab; print('Isaac Lab installed successfully')"
+```
+
+### Installation Reference (For Documentation)
+
+Isaac Lab was installed using the following steps:
 
 ```bash
 # Activate environment
 conda activate env_isaaclab
 
 # Clone Isaac Lab repository
-cd C:\Users\ratan\Desktop
+cd /home/lali/Desktop
 git clone https://github.com/isaac-sim/IsaacLab.git
 cd IsaacLab
 
-# Run installation script (for Linux, adapt for Windows)
-# Note: isaaclab.sh is a bash script - may need WSL or manual installation on Windows
-# For now, we'll use Isaac Sim's built-in capabilities
+# Run installation script
+./isaaclab.sh --install
+
+# Verify installation
+./isaaclab.sh -p source/standalone/tutorials/00_sim/create_empty.py
 ```
 
-**Windows Note:** Isaac Lab's installation script is designed for Linux. On Windows, we'll:
-1. Use Isaac Sim's built-in sensor/robot APIs directly
-2. Leverage Isaac Sim Python API for scene management
-3. Implement custom wrappers in `src/sim/environment.py`
+Isaac Lab provides:
+1. Advanced sensor APIs (cameras, IMU, depth sensors)
+2. Robot articulation and control utilities
+3. ROS 2 bridge integration
+4. RL environment templates
+5. Scene composition and randomization tools
 
 ---
 
@@ -155,50 +180,57 @@ cd IsaacLab
 Create required directories for Phase 1:
 
 ```bash
-# From project root (C:\Users\ratan\Desktop\drone_uav)
-mkdir data\raw\runtime
-mkdir data\raw\runtime\sensors
-mkdir data\raw\scenes
-mkdir data\dataset\shards
+# From project root (/home/lali/Desktop/drone_uav)
+mkdir -p data/raw/runtime
+mkdir -p data/raw/runtime/sensors
+mkdir -p data/raw/scenes
+mkdir -p data/dataset/shards
+```
+
+Or use the setup script to create all required directories:
+
+```bash
+python scripts/setup_sim.py --fix-dirs
 ```
 
 ### Environment Activation Workflow
 
-Create a convenience script `activate_env.bat`:
+Create a convenience script `activate_env.sh`:
 
-```batch
-@echo off
-echo Activating RAPID v2 environment...
+```bash
+#!/bin/bash
+echo "Activating RAPID v2 environment..."
 
-REM Activate conda environment
-call conda activate env_isaaclab
+# Activate conda environment
+source ~/miniconda3/bin/activate env_isaaclab
 
-REM Load ROS 2 (if installed)
-if exist C:\dev\ros2_humble\local_setup.bat (
-    call C:\dev\ros2_humble\local_setup.bat
-    echo ROS 2 Humble loaded
-) else (
-    echo WARNING: ROS 2 not found. Install for full Phase 1 functionality.
-)
+# Load ROS 2 Jazzy
+if [ -f /opt/ros/jazzy/setup.bash ]; then
+    source /opt/ros/jazzy/setup.bash
+    echo "ROS 2 Jazzy loaded"
+else
+    echo "WARNING: ROS 2 not found. Install for full Phase 1 functionality."
+fi
 
-REM Set project root
-set RAPID_ROOT=%CD%
-echo RAPID_ROOT=%RAPID_ROOT%
+# Set project root
+export RAPID_ROOT=$(pwd)
+echo "RAPID_ROOT=$RAPID_ROOT"
 
-REM Verify setup
-echo.
-echo Verifying installation...
+# Verify setup
+echo ""
+echo "Verifying installation..."
 python -c "import torch; print(f'PyTorch: {torch.__version__}, CUDA: {torch.cuda.is_available()}')"
-pip show isaacsim | findstr Version
+pip show isaacsim | grep Version
 
-echo.
-echo Environment ready. Use 'isaacsim' to launch Isaac Sim.
+echo ""
+echo "Environment ready. Use 'isaacsim' to launch Isaac Sim."
 ```
 
-Usage:
+Make the script executable and use it:
 ```bash
-cd C:\Users\ratan\Desktop\drone_uav
-activate_env.bat
+cd /home/lali/Desktop/drone_uav
+chmod +x activate_env.sh
+source activate_env.sh
 ```
 
 ---
@@ -225,11 +257,11 @@ python -c "import torch; print('CUDA Available:', torch.cuda.is_available()); pr
 ### ROS 2 Verification
 
 ```bash
-# Load ROS 2 environment
-call setup_ros2.bat
-
 # Check ROS 2 version
 ros2 --version
+
+# Check ROS distribution
+echo $ROS_DISTRO
 
 # List ROS 2 topics (should be empty initially)
 ros2 topic list
@@ -239,15 +271,15 @@ ros2 topic list
 
 ```bash
 # Verify directories exist
-dir data\raw\runtime
-dir config\env
-dir config\ros2
+ls -la data/raw/runtime
+ls -la config/env
+ls -la config/ros2
 
 # Verify config files
-type config\env\isaac_lab_env.yaml
-type config\env\sensors.yaml
-type config\env\scenes_config.yaml
-type config\ros2\bridge_topics.yaml
+cat config/env/isaac_lab_env.yaml
+cat config/env/sensors.yaml
+cat config/env/scenes_config.yaml
+cat config/ros2/bridge_topics.yaml
 ```
 
 ### Integration Test
@@ -255,7 +287,7 @@ type config\ros2\bridge_topics.yaml
 ```bash
 # Run Phase 1 setup verification script
 conda activate env_isaaclab
-python scripts\setup_sim.py
+python scripts/setup_sim.py
 
 # Expected output: Environment checks passed
 ```
@@ -315,23 +347,28 @@ pip install --force-reinstall "isaacsim[all,extscache]==5.0.0" --extra-index-url
 
 After completing environment setup:
 
-1. **Test sensor configuration:**
+1. **Implement Isaac Sim environment wrapper:**
    ```bash
-   python scripts/test_sensors.py
+   # Edit src/sim/environment.py to implement sensor and scene loading
    ```
 
-2. **Generate test scenes:**
+2. **Create scene generation scripts:**
+   ```bash
+   # Implement scripts/generate_scenes.py for procedural scene generation
+   ```
+
+3. **Test ROS 2 bridge integration:**
+   ```bash
+   # Create and test scripts/test_ros2_bridge.py
+   ```
+
+4. **Generate test scenes:**
    ```bash
    python scripts/generate_scenes.py --family office --count 5
    ```
 
-3. **Verify ROS 2 bridge:**
-   ```bash
-   python scripts/test_ros2_bridge.py
-   ```
-
-4. **Review Phase 1 checklist:**
-   - See `docs/phase1_checklist.md` for completion criteria
+5. **Review Phase 1 checklist:**
+   - See [docs/phase1_checklist.md](docs/phase1_checklist.md) for completion criteria
 
 ---
 
@@ -339,6 +376,6 @@ After completing environment setup:
 
 - **Isaac Sim Docs:** https://docs.omniverse.nvidia.com/isaacsim/latest/
 - **Isaac Lab Docs:** https://isaac-sim.github.io/IsaacLab/
-- **ROS 2 Humble Docs:** https://docs.ros.org/en/humble/
-- **Project Plan:** `docs/plan.md`
-- **Owner Log:** `docs/owner_log.md`
+- **ROS 2 Jazzy Docs:** https://docs.ros.org/en/jazzy/
+- **Project Plan:** [docs/plan.md](docs/plan.md)
+- **Owner Log:** [docs/owner_log.md](docs/owner_log.md)

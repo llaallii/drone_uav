@@ -147,24 +147,29 @@ def check_ros2():
 
         if result.returncode == 0:
             version = result.stdout.strip()
-            if "humble" in version.lower():
+            if "jazzy" in version.lower():
                 print_success(f"ROS 2 installed: {version}")
                 return True
+            elif "humble" in version.lower():
+                print_warning(f"ROS 2 Humble found (expected Jazzy): {version}")
+                print("  Consider upgrading to ROS 2 Jazzy for Ubuntu 24.04")
+                return True  # Allow Humble but recommend Jazzy
             else:
-                print_warning(f"ROS 2 installed but not Humble: {version}")
-                print("  Expected: ROS 2 Humble")
+                print_warning(f"ROS 2 installed: {version} (expected Jazzy)")
+                print("  Expected: ROS 2 Jazzy for Ubuntu 24.04")
                 return True  # Allow other distributions
 
         else:
             print_error("ROS 2 not found")
-            print("  Fix: Install ROS 2 Humble for Windows")
+            print("  Fix: Install ROS 2 Jazzy for Ubuntu 24.04")
             print("       See: config/env/setup_instructions.md")
             return False
 
     except FileNotFoundError:
         print_error("ROS 2 not found in PATH")
-        print("  Fix: Install ROS 2 Humble and add to PATH")
-        print("       Or run: call setup_ros2.bat (if ROS 2 is installed)")
+        print("  Fix: Install ROS 2 Jazzy and source the setup file")
+        print("       source /opt/ros/jazzy/setup.bash")
+        print("       Or add to ~/.bashrc for automatic loading")
         return False
     except Exception as e:
         print_error(f"Error checking ROS 2: {e}")
@@ -305,17 +310,19 @@ def main():
     print(f"\n{Colors.BOLD}Result: {passed}/{total} checks passed{Colors.END}\n")
 
     if passed == total:
-        print(f"{Colors.GREEN}{Colors.BOLD}✓ Environment setup complete! Ready for Phase 1 development.{Colors.END}\n")
+        print(f"{Colors.GREEN}{Colors.BOLD}✓ Environment setup complete! Ready for Phase 1 implementation.{Colors.END}\n")
         print("Next steps:")
-        print("  1. Install ROS 2 Humble if not already installed (see config/env/setup_instructions.md)")
-        print("  2. Implement Isaac Sim environment wrapper (src/sim/environment.py)")
-        print("  3. Create scene generation scripts (scripts/generate_scenes.py)")
-        print("  4. Verify ROS 2 bridge (scripts/test_ros2_bridge.py)")
+        print("  1. Implement Isaac Sim environment wrapper (src/sim/environment.py)")
+        print("  2. Create scene generation scripts (scripts/generate_scenes.py)")
+        print("  3. Test ROS 2 Jazzy bridge (scripts/test_ros2_bridge.py)")
+        print("  4. Generate and validate test scenes (10-20 across families)")
         print("  5. Review Phase 1 checklist (docs/phase1_checklist.md)")
+        print("\n Platform: Ubuntu 24.04 LTS | ROS 2: Jazzy | Isaac Sim: 5.0.0")
         return 0
     else:
         print(f"{Colors.RED}{Colors.BOLD}✗ Environment setup incomplete. Fix errors above.{Colors.END}\n")
         print("See config/env/setup_instructions.md for detailed setup guide.")
+        print("Platform: Ubuntu 24.04 LTS | Expected ROS 2: Jazzy")
         return 1
 
 

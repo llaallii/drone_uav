@@ -10,27 +10,31 @@
 - [x] Create comprehensive `setup_instructions.md`
 
 ### ROS 2 Installation
-- [ ] Install ROS 2 Humble for Windows
-  - [ ] Download ROS 2 Humble binary release
-  - [ ] Extract to `C:\dev\ros2_humble\` (or preferred location)
-  - [ ] Create `setup_ros2.bat` activation script
-  - [ ] Install `colcon-common-extensions` via pip
-  - [ ] Verify installation: `ros2 --version`
-  - [ ] Test topic tools: `ros2 topic list`
+- [x] Install ROS 2 Jazzy on Ubuntu 24.04 ✅
+  - [x] Installed ROS 2 Jazzy desktop via apt ✅
+  - [x] Configured environment in `~/.bashrc` ✅
+  - [x] Installed `colcon-common-extensions` and `rosdep` ✅
+  - [x] Verified installation: `ros2 --version` ✅
+  - [x] Tested topic tools: `ros2 topic list` ✅
 
 ### Isaac Sim ROS 2 Bridge
-- [ ] Verify Isaac Sim ROS 2 bridge availability
+- [ ] Verify Isaac Sim ROS 2 bridge availability with Jazzy
 - [ ] Test bridge initialization from Python
-- [ ] Document any Windows-specific bridge configuration
+- [ ] Document Ubuntu-specific bridge configuration
 - [ ] Create bridge launch script/configuration
 
+### Isaac Lab Installation
+- [x] Isaac Lab cloned and installed ✅
+- [x] Verified Isaac Lab accessibility in conda environment ✅
+- [x] Tested Isaac Lab utilities and sensors ✅
+
 ### Environment Activation
-- [ ] Create `activate_env.bat` convenience script
+- [ ] Create `activate_env.sh` convenience script
   - [ ] Activates conda environment (env_isaaclab)
-  - [ ] Loads ROS 2 environment
+  - [ ] Loads ROS 2 Jazzy environment
   - [ ] Sets RAPID_ROOT environment variable
   - [ ] Runs verification checks
-- [ ] Test activation script on fresh terminal
+- [ ] Make script executable and test on fresh terminal
 
 ### Sensor Configuration
 - [x] Create `sensors.yaml` with all Phase 1 sensors
@@ -46,11 +50,11 @@
 - [ ] Validate randomization ranges
 
 ### Host Dependencies
-- [ ] Document GPU requirements (NVIDIA RTX/Tesla, CUDA 12.8)
-- [ ] Document VRAM requirements (8GB min, 16GB recommended)
-- [ ] Document RAM requirements (16GB min, 32GB recommended)
-- [ ] Document disk space requirements (50GB+)
-- [ ] List any additional Windows-specific dependencies
+- [x] Document GPU requirements (NVIDIA RTX/Tesla, CUDA 12.8) ✅
+- [x] Document VRAM requirements (8GB min, 16GB recommended) ✅
+- [x] Document RAM requirements (16GB min, 32GB recommended) ✅
+- [x] Document disk space requirements (50GB+) ✅
+- [x] Updated for Ubuntu 24.04 LTS platform ✅
 
 ### Verification
 - [ ] Run full environment verification via `scripts/setup_sim.py`
@@ -67,6 +71,7 @@
 
 ## Notes
 - All configuration files use YAML format for readability
-- Windows paths use backslash notation (`.\data\`)
+- Ubuntu/Linux paths use forward slash notation (`./data/`)
 - Version pinning critical for reproducibility
-- Document all deviations from original Linux-based plan
+- Platform migrated from Windows to Ubuntu 24.04 LTS for better ROS 2 and Isaac Lab compatibility
+- ROS 2 Jazzy is native to Ubuntu 24.04, providing better performance than Humble

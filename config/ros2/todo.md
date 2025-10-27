@@ -1,4 +1,4 @@
-# TODO - ROS 2 Configuration
+# TODO - ROS 2 Configuration (Jazzy)
 
 ## Phase 1 - ROS 2 Bridge Setup
 
@@ -69,8 +69,9 @@
 - [ ] Rosbag recording integration for episodes
 
 ## Notes
-- ROS 2 Humble required for Windows compatibility
+- **Platform Update:** ROS 2 Jazzy on Ubuntu 24.04 LTS (native support)
 - All sensor topics use reliable QoS (critical data)
 - /clock topic uses best_effort QoS (standard practice)
 - TF tree published at 20 Hz to match sensor rate
 - Bridge runs in same process as Isaac Sim for low latency
+- ROS 2 Jazzy provides improved performance and newer features compared to Humble
