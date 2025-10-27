@@ -1,0 +1,232 @@
+# ROS 2 Bridge Topic Configuration
+# Phase 1 - Environment Setup
+
+# Global bridge settings
+bridge:
+  enabled: true
+  ros2_distribution: humble
+  domain_id: 0                           # ROS_DOMAIN_ID
+  use_sim_time: true                     # Use Isaac Sim time instead of wall time
+
+  # Bridge behavior
+  auto_start: true                       # Start bridge with simulation
+  lazy_subscribers: false                # Always publish, even without subscribers
+  queue_size: 10                         # Message queue size
+
+# Topic definitions for Phase 1
+
+topics:
+  # Depth camera topic
+  - name: /camera/depth
+    type: sensor_msgs/Image
+    direction: publish                   # Isaac Sim → ROS 2
+    qos:
+      reliability: reliable
+      durability: volatile
+      history: keep_last
+      depth: 10
+    rate_hz: 20
+    description: "Stereo depth camera output (32FC1, depth in meters)"
+
+  - name: /camera/depth/camera_info
+    type: sensor_msgs/CameraInfo
+    direction: publish
+    qos:
+      reliability: reliable
+      durability: volatile
+      history: keep_last
+      depth: 1
+    rate_hz: 20
+    description: "Depth camera calibration info"
+
+  # RGB camera topic (optional, disabled in Phase 1)
+  - name: /camera/rgb
+    type: sensor_msgs/Image
+    direction: publish
+    enabled: false
+    qos:
+      reliability: reliable
+      durability: volatile
+      history: keep_last
+      depth: 10
+    rate_hz: 20
+    description: "RGB camera output (optional, for visualization)"
+
+  # IMU topic
+  - name: /imu/data
+    type: sensor_msgs/Imu
+    direction: publish
+    qos:
+      reliability: reliable
+      durability: volatile
+      history: keep_last
+      depth: 100                         # Higher queue for fast IMU data
+    rate_hz: 20                          # Downsampled from 100 Hz
+    description: "IMU measurements (accel + gyro)"
+
+  # Odometry topic
+  - name: /odom
+    type: nav_msgs/Odometry
+    direction: publish
+    qos:
+      reliability: reliable
+      durability: volatile
+      history: keep_last
+      depth: 10
+    rate_hz: 20
+    description: "Ground truth odometry (Phase 1-2)"
+
+  # Drone state topic (for planner in Phase 2)
+  - name: /drone/state
+    type: geometry_msgs/PoseStamped
+    direction: publish
+    qos:
+      reliability: reliable
+      durability: volatile
+      history: keep_last
+      depth: 10
+    rate_hz: 20
+    description: "Current drone pose (position + orientation)"
+
+  # Control command topic (Phase 3+)
+  - name: /cmd_vel
+    type: geometry_msgs/Twist
+    direction: subscribe                 # ROS 2 → Isaac Sim
+    enabled: false                       # Enable in Phase 3
+    qos:
+      reliability: reliable
+      durability: volatile
+      history: keep_last
+      depth: 1
+    rate_hz: 50
+    description: "Velocity commands from controller (Phase 3)"
+
+  # Trajectory topic (Phase 2+)
+  - name: /trajectory
+    type: nav_msgs/Path
+    direction: subscribe
+    enabled: false                       # Enable in Phase 2
+    qos:
+      reliability: reliable
+      durability: volatile
+      history: keep_last
+      depth: 1
+    rate_hz: 10
+    description: "Planned trajectory from Fast-Planner"
+
+  # Clock topic (sim time synchronization)
+  - name: /clock
+    type: rosgraph_msgs/Clock
+    direction: publish
+    qos:
+      reliability: best_effort           # Clock can use best effort
+      durability: volatile
+      history: keep_last
+      depth: 1
+    rate_hz: 100                         # High rate for time sync
+    description: "Simulation time for ROS 2 nodes"
+
+# TF (Transform) tree configuration
+tf:
+  enabled: true
+  publish_rate_hz: 20
+
+  # Frame definitions
+  frames:
+    world:
+      frame_id: world
+      description: "Global inertial frame"
+
+    base_link:
+      frame_id: base_link
+      parent: world
+      description: "Drone body frame"
+
+    camera_depth:
+      frame_id: camera_depth_optical_frame
+      parent: base_link
+      translation: [0.1, 0.0, 0.0]       # 10 cm forward from drone center
+      rotation: [0.0, 0.0, 0.0]
+      description: "Depth camera optical frame"
+
+    imu_link:
+      frame_id: imu_link
+      parent: base_link
+      translation: [0.0, 0.0, 0.0]       # At drone center
+      rotation: [0.0, 0.0, 0.0]
+      description: "IMU sensor frame"
+
+  # TF topics
+  topics:
+    - name: /tf
+      type: tf2_msgs/TFMessage
+      qos:
+        reliability: reliable
+        durability: volatile
+        history: keep_last
+        depth: 100
+
+    - name: /tf_static
+      type: tf2_msgs/TFMessage
+      qos:
+        reliability: reliable
+        durability: transient_local       # Latch static transforms
+        history: keep_last
+        depth: 100
+
+# Diagnostics (for monitoring bridge health)
+diagnostics:
+  enabled: true
+  publish_rate_hz: 1
+
+  topic:
+    name: /diagnostics
+    type: diagnostic_msgs/DiagnosticArray
+    qos:
+      reliability: reliable
+      durability: volatile
+      history: keep_last
+      depth: 10
+
+# Message type mappings (Isaac Sim → ROS 2)
+type_mappings:
+  depth_image:
+    isaac_type: "IsaacSensor.DepthCamera"
+    ros2_type: "sensor_msgs/Image"
+    encoding: "32FC1"
+
+  rgb_image:
+    isaac_type: "IsaacSensor.RGBCamera"
+    ros2_type: "sensor_msgs/Image"
+    encoding: "rgb8"
+
+  imu:
+    isaac_type: "IsaacSensor.IMU"
+    ros2_type: "sensor_msgs/Imu"
+
+  odometry:
+    isaac_type: "IsaacSensor.Odometry"
+    ros2_type: "nav_msgs/Odometry"
+
+# Namespace configuration
+namespaces:
+  use_namespaces: false                  # Single drone for Phase 1
+  # For multi-drone (future):
+  # drone_prefix: "drone_{id}"
+
+# Launch configuration
+launch:
+  auto_launch_bridge: true               # Start bridge when simulation starts
+  bridge_node_name: isaac_ros2_bridge
+  log_level: info                        # info, debug, warn, error
+
+  # Launch file path (to be created)
+  launch_file: ".\\config\\ros2\\isaac_bridge_launch.py"
+
+notes:
+  - "Phase 1 uses publish-only topics (depth, IMU, odom)"
+  - "Subscribe topics (cmd_vel, trajectory) enabled in Phase 2-3"
+  - "All topics use reliable QoS for critical sensor data"
+  - "Clock topic uses best_effort QoS (standard for /clock)"
+  - "TF tree published at 20 Hz to match sensor rate"
+  - "Diagnostics for monitoring bridge health during long runs"

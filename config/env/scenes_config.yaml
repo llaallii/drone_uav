@@ -1,0 +1,440 @@
+# Scene Configuration for RAPID v2
+# Phase 1 - Environment Setup
+# 10 Scene Families for Diverse Training Data
+
+# Global scene settings
+global:
+  use_procedural_generation: true        # Generate scenes programmatically
+  use_isaac_assets: true                 # Leverage NVIDIA Isaac assets
+  use_custom_assets: true                # Use custom USD/OBJ models
+  randomization_enabled: true            # Enable Isaac Replicator randomization
+
+  # Scene bounds (meters)
+  min_scene_size: [10, 10, 3]            # Minimum [x, y, z] dimensions
+  max_scene_size: [50, 50, 10]           # Maximum [x, y, z] dimensions
+
+  # Output
+  scene_seed_log: ".\\data\\raw\\runtime\\scenes.jsonl"
+  scene_cache_dir: ".\\data\\raw\\scenes\\cache"
+
+# Scene Families (10 total)
+
+scene_families:
+  # 1. Office Environment
+  office:
+    enabled: true
+    description: "Indoor office with desks, cubicles, and obstacles"
+    difficulty: easy
+
+    dimensions:
+      size_range: [[15, 15, 3], [30, 30, 4]]
+      ceiling_height: [2.5, 4.0]
+
+    assets:
+      - type: desk
+        count_range: [5, 15]
+        spacing: random
+      - type: chair
+        count_range: [5, 20]
+      - type: partition
+        count_range: [3, 10]
+      - type: plant
+        count_range: [2, 8]
+
+    randomization:
+      lighting:
+        type: indoor_office
+        intensity_range: [0.5, 1.5]
+        color_temp_k: [3000, 5000]
+      materials:
+        randomize_textures: true
+        texture_set: office_materials
+
+    navigation:
+      start_zone: corner
+      goal_sampling: uniform
+      min_path_length: 10
+
+  # 2. Warehouse Environment
+  warehouse:
+    enabled: true
+    description: "Large warehouse with shelving, pallets, and narrow aisles"
+    difficulty: medium
+
+    dimensions:
+      size_range: [[25, 25, 5], [50, 50, 10]]
+      ceiling_height: [4.0, 8.0]
+
+    assets:
+      - type: shelf_unit
+        count_range: [10, 25]
+        arrangement: grid
+        aisle_width: [1.5, 3.0]
+      - type: pallet
+        count_range: [5, 15]
+      - type: forklift
+        count_range: [1, 3]
+      - type: crate
+        count_range: [10, 30]
+
+    randomization:
+      lighting:
+        type: warehouse
+        intensity_range: [0.7, 1.3]
+        shadows: true
+      materials:
+        randomize_textures: true
+        texture_set: industrial_materials
+
+    navigation:
+      start_zone: entrance
+      goal_sampling: weighted_distant
+      min_path_length: 20
+
+  # 3. Forest Environment
+  forest:
+    enabled: true
+    description: "Natural forest with trees, undergrowth, varied terrain"
+    difficulty: hard
+
+    dimensions:
+      size_range: [[20, 20, 8], [40, 40, 15]]
+      terrain_elevation_range: [-2, 5]
+
+    assets:
+      - type: tree
+        count_range: [30, 80]
+        species: [pine, oak, birch]
+        height_range: [3, 12]
+      - type: bush
+        count_range: [20, 60]
+      - type: rock
+        count_range: [10, 30]
+      - type: fallen_log
+        count_range: [3, 10]
+
+    randomization:
+      lighting:
+        type: outdoor_forest
+        intensity_range: [0.8, 1.2]
+        time_of_day: [0600, 1800]          # 6 AM to 6 PM
+        sun_angle_variation: true
+      materials:
+        randomize_textures: true
+        texture_set: natural_materials
+        seasonal_variation: true            # Spring/summer/fall
+
+    navigation:
+      start_zone: edge
+      goal_sampling: uniform
+      min_path_length: 25
+      terrain_aware: true
+
+  # 4. Urban Environment
+  urban:
+    enabled: true
+    description: "City environment with buildings, streets, obstacles"
+    difficulty: medium
+
+    dimensions:
+      size_range: [[30, 30, 20], [50, 50, 40]]
+      building_height_range: [5, 30]
+
+    assets:
+      - type: building
+        count_range: [8, 20]
+        footprint_range: [[5, 5], [15, 15]]
+      - type: street_lamp
+        count_range: [10, 25]
+      - type: vehicle
+        count_range: [5, 15]
+      - type: billboard
+        count_range: [2, 8]
+
+    randomization:
+      lighting:
+        type: outdoor_urban
+        intensity_range: [0.6, 1.4]
+        time_of_day: [0000, 2400]          # Full day/night cycle
+        street_lights: true
+      materials:
+        randomize_textures: true
+        texture_set: urban_materials
+
+    navigation:
+      start_zone: street_level
+      goal_sampling: building_rooftops
+      min_path_length: 30
+      altitude_range: [2, 25]
+
+  # 5. Cave Environment
+  cave:
+    enabled: true
+    description: "Underground cave with narrow passages and chambers"
+    difficulty: hard
+
+    dimensions:
+      size_range: [[15, 15, 5], [35, 35, 12]]
+      passage_width_range: [1.5, 4.0]
+
+    assets:
+      - type: stalactite
+        count_range: [20, 60]
+      - type: stalagmite
+        count_range: [20, 60]
+      - type: rock_column
+        count_range: [5, 15]
+      - type: boulder
+        count_range: [10, 30]
+
+    randomization:
+      lighting:
+        type: cave
+        intensity_range: [0.1, 0.4]         # Very dark
+        spot_lights: [2, 5]                 # Simulated headlamp
+      materials:
+        randomize_textures: true
+        texture_set: cave_materials
+        wetness_variation: true
+
+    navigation:
+      start_zone: cave_entrance
+      goal_sampling: deep_chamber
+      min_path_length: 20
+      narrow_passages: true
+
+  # 6. Maze Environment
+  maze:
+    enabled: true
+    description: "Structured maze with walls and dead ends"
+    difficulty: medium
+
+    dimensions:
+      size_range: [[20, 20, 3], [40, 40, 5]]
+      wall_height: [2.0, 4.0]
+
+    assets:
+      - type: wall_segment
+        count_range: [40, 100]             # Generated procedurally
+        thickness: 0.2
+      - type: corner_obstacle
+        count_range: [5, 15]
+
+    randomization:
+      lighting:
+        type: indoor_generic
+        intensity_range: [0.6, 1.2]
+      materials:
+        randomize_textures: true
+        texture_set: maze_materials
+      topology:
+        maze_algorithm: recursive_backtracker  # Generates solvable mazes
+        dead_end_probability: 0.3
+
+    navigation:
+      start_zone: maze_start
+      goal_sampling: maze_end
+      ensure_solvable: true
+      min_path_length: 30
+
+  # 7. Mine Environment
+  mine:
+    enabled: true
+    description: "Mining tunnel with support beams and equipment"
+    difficulty: medium
+
+    dimensions:
+      size_range: [[20, 20, 4], [40, 40, 8]]
+      tunnel_width_range: [2.5, 4.5]
+
+    assets:
+      - type: support_beam
+        count_range: [15, 40]
+      - type: mine_cart
+        count_range: [3, 8]
+      - type: rail_track
+        count_range: [2, 5]
+      - type: mining_equipment
+        count_range: [5, 12]
+
+    randomization:
+      lighting:
+        type: mine_tunnel
+        intensity_range: [0.3, 0.7]
+        work_lights: [3, 8]
+      materials:
+        randomize_textures: true
+        texture_set: industrial_materials
+        dust_particles: true
+
+    navigation:
+      start_zone: mine_entrance
+      goal_sampling: tunnel_end
+      min_path_length: 25
+
+  # 8. Shipyard Environment
+  shipyard:
+    enabled: true
+    description: "Industrial shipyard with cranes, containers, structures"
+    difficulty: medium
+
+    dimensions:
+      size_range: [[30, 30, 15], [50, 50, 25]]
+
+    assets:
+      - type: shipping_container
+        count_range: [15, 40]
+        stacking: true
+        stack_height_range: [1, 4]
+      - type: crane
+        count_range: [2, 5]
+      - type: ship_hull
+        count_range: [1, 2]
+      - type: scaffolding
+        count_range: [5, 15]
+
+    randomization:
+      lighting:
+        type: outdoor_industrial
+        intensity_range: [0.7, 1.3]
+        time_of_day: [0600, 2000]
+      materials:
+        randomize_textures: true
+        texture_set: industrial_materials
+        weathering: true
+
+    navigation:
+      start_zone: ground_level
+      goal_sampling: elevated_platforms
+      min_path_length: 30
+      altitude_range: [1, 20]
+
+  # 9. Ruins Environment
+  ruins:
+    enabled: true
+    description: "Ancient ruins with collapsed structures and debris"
+    difficulty: hard
+
+    dimensions:
+      size_range: [[25, 25, 8], [45, 45, 15]]
+
+    assets:
+      - type: collapsed_wall
+        count_range: [10, 25]
+      - type: pillar_fragment
+        count_range: [8, 20]
+      - type: rubble_pile
+        count_range: [15, 35]
+      - type: intact_archway
+        count_range: [3, 8]
+
+    randomization:
+      lighting:
+        type: outdoor_ruins
+        intensity_range: [0.8, 1.2]
+        time_of_day: [0600, 1900]
+        weathering: overgrown
+      materials:
+        randomize_textures: true
+        texture_set: ancient_materials
+        erosion: true
+
+    navigation:
+      start_zone: perimeter
+      goal_sampling: ruin_center
+      min_path_length: 25
+      uneven_terrain: true
+
+  # 10. Jungle Environment
+  jungle:
+    enabled: true
+    description: "Dense jungle with thick vegetation and vines"
+    difficulty: hard
+
+    dimensions:
+      size_range: [[20, 20, 10], [40, 40, 18]]
+      canopy_height: [8, 15]
+
+    assets:
+      - type: jungle_tree
+        count_range: [40, 90]
+        height_range: [5, 15]
+      - type: vine
+        count_range: [30, 80]
+      - type: fern
+        count_range: [50, 150]
+      - type: bamboo_cluster
+        count_range: [10, 30]
+
+    randomization:
+      lighting:
+        type: jungle
+        intensity_range: [0.4, 1.0]         # Filtered through canopy
+        dappled_light: true
+        time_of_day: [0700, 1800]
+      materials:
+        randomize_textures: true
+        texture_set: jungle_materials
+        wetness_variation: true
+        fog: true
+
+    navigation:
+      start_zone: jungle_edge
+      goal_sampling: deep_jungle
+      min_path_length: 25
+      dense_vegetation: true
+
+# Isaac Replicator Randomization (applies to all scenes)
+replicator:
+  enabled: true
+
+  # Lighting randomization
+  lighting:
+    randomize_intensity: true
+    intensity_variation: 0.3               # ±30%
+    randomize_color_temp: true
+    color_temp_variation: 500              # ±500K
+    randomize_shadows: true
+    hdr_enabled: true
+
+  # Material randomization
+  materials:
+    randomize_albedo: true
+    albedo_variation: 0.2                  # ±20%
+    randomize_roughness: true
+    roughness_range: [0.2, 0.9]
+    randomize_metallic: true
+    metallic_probability: 0.1
+
+  # Obstacle randomization (for curriculum)
+  obstacles:
+    dynamic_obstacles_enabled: false        # Enable in Phase 6
+    dynamic_obstacle_probability: 0.0       # 0% for Phase 1
+    obstacle_motion_speed_range: [0, 0]     # Static for Phase 1
+
+  # Environmental effects
+  environment:
+    fog_enabled: false                      # Enable selectively (jungle, cave)
+    rain_enabled: false                     # Phase 7 (sim-to-real)
+    wind_enabled: false                     # Phase 3 (controller testing)
+
+# Scene generation settings
+generation:
+  scenes_per_family: 50                     # Generate 50 scenes per family (500 total)
+  random_seed_base: 42                      # Reproducible random generation
+  parallel_generation: true                 # Generate scenes in parallel
+  validation_enabled: true                  # Validate scenes are navigable
+
+  # Validation criteria
+  validation:
+    check_navigability: true
+    min_free_space_percent: 30              # At least 30% free space
+    ensure_path_exists: true                # Guarantee start→goal path exists
+
+notes:
+  - "10 scene families covering indoor, outdoor, structured, natural environments"
+  - "Difficulty tags: easy (office), medium (warehouse, urban, maze, mine, shipyard), hard (forest, cave, ruins, jungle)"
+  - "All scenes use Isaac Replicator for lighting/material randomization"
+  - "Dynamic obstacles and environmental effects (wind, rain) added in later phases"
+  - "Scene seeds logged to scenes.jsonl for reproducibility"
+  - "Each family generates 50 scenes → 500 total scenes for Phase 1"

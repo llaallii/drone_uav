@@ -1,0 +1,85 @@
+# Isaac Lab Environment Configuration
+# Phase 1 - Environment Setup
+
+environment:
+  name: env_isaaclab
+  type: conda
+  python_version: "3.11"
+
+isaac_sim:
+  version: "5.0.0.0"
+  installation_method: pip
+  package: isaacsim
+  launch_command: isaacsim
+
+  # PyPI index for NVIDIA packages
+  nvidia_pypi_index: https://pypi.nvidia.com
+
+  # Core dependencies
+  dependencies:
+    torch: "2.7.0"
+    torchvision: "0.22.0"
+    cuda_version: "cu128"
+    pytorch_index_url: https://download.pytorch.org/whl/cu128
+
+isaac_lab:
+  enabled: true
+  repository: https://github.com/isaac-sim/IsaacLab.git
+  installation_script: "./isaaclab.sh --install"
+
+  # Isaac Lab features to use
+  features:
+    sensors: true              # Camera, depth, IMU, odometry sensors
+    robots: true               # Quadrotor/drone robot definitions
+    ros2_bridge: true          # ROS 2 integration
+    replicator: true           # Isaac Replicator for randomization
+    rl_utilities: true         # Reinforcement learning tools (for Phase 9+)
+
+platform:
+  os: windows
+  architecture: x86_64
+
+  # System requirements
+  requirements:
+    glibc: "N/A (Windows)"
+    gpu: "NVIDIA RTX/Tesla (CUDA 12.8 compatible)"
+    vram_min: "8GB"
+    ram_min: "16GB"
+
+paths:
+  # Relative paths from project root
+  project_root: "."
+  data_root: ".\\data"
+  config_root: ".\\config"
+  runtime_logs: ".\\data\\raw\\runtime"
+  scene_seeds: ".\\data\\raw\\runtime\\scenes.jsonl"
+  sensor_logs: ".\\data\\raw\\runtime\\sensors"
+
+ros2:
+  distribution: humble
+  platform: windows
+  required: true
+  # ROS 2 setup will be documented in setup_instructions.md
+
+simulation:
+  physics_dt: 0.01              # 100 Hz physics simulation
+  rendering_dt: 0.05            # 20 Hz rendering (matches sensor rate)
+  headless: false               # Set true for batch runs
+
+  # Scene configuration
+  scene_config: ".\\config\\env\\scenes_config.yaml"
+  sensor_config: ".\\config\\env\\sensors.yaml"
+
+verification:
+  # Commands to verify installation
+  isaac_sim_check: "isaacsim --help"
+  python_version_check: "python --version"
+  torch_cuda_check: "python -c \"import torch; print(torch.cuda.is_available())\""
+  ros2_check: "ros2 --version"
+
+notes:
+  - "This configuration assumes Isaac Sim 5.0.0 is already installed via pip"
+  - "ROS 2 Humble installation is required for Phase 1 completion"
+  - "All paths use Windows backslash notation"
+  - "For activation: conda activate env_isaaclab"
+  - "First run may take 10+ minutes to pull extension cache"

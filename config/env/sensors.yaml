@@ -1,0 +1,207 @@
+# Sensor Configuration for RAPID v2
+# Phase 1 - Environment Setup
+
+# Global sensor settings
+global:
+  update_rate_hz: 20                    # All sensors operate at 20 Hz
+  simulation_sync: true                  # Synchronize with physics timestep
+  enable_physics_noise: true             # Add realistic noise models
+
+# Stereo Depth Camera Configuration
+depth_camera:
+  type: stereo_depth
+  enabled: true
+
+  # Camera parameters
+  resolution:
+    width: 640
+    height: 480
+
+  fov:
+    horizontal_deg: 90
+    vertical_deg: 60
+
+  # Stereo configuration
+  baseline_m: 0.12                       # 12 cm baseline between cameras
+  min_depth_m: 0.1
+  max_depth_m: 30.0
+
+  # Frame rate
+  update_rate_hz: 20
+
+  # Noise model (physics-based)
+  noise:
+    enabled: true
+    depth_noise_std_m: 0.01              # 1 cm standard deviation
+    lateral_noise_std_px: 0.5            # Sub-pixel noise
+    missing_data_probability: 0.02       # 2% missing/invalid pixels
+    motion_blur: true
+
+  # Post-processing
+  denoise: false                         # Keep raw for realism
+  hole_filling: false                    # Keep raw for realism
+
+  # Mount configuration
+  mount:
+    position: [0.1, 0.0, 0.0]            # 10 cm forward from drone center
+    orientation: [0.0, 0.0, 0.0]         # Level with drone (roll, pitch, yaw)
+
+  # Output
+  ros2_topic: /camera/depth
+  data_format: float32                   # Depth in meters
+  encoding: 32FC1
+
+  # Logging
+  log_to_disk: true
+  log_path: ".\\data\\raw\\runtime\\sensors\\depth"
+  compression: lz4
+
+# RGB Camera (optional, for visualization)
+rgb_camera:
+  type: rgb
+  enabled: false                         # Disable for Phase 1 (depth only)
+
+  resolution:
+    width: 640
+    height: 480
+
+  fov:
+    horizontal_deg: 90
+    vertical_deg: 60
+
+  update_rate_hz: 20
+
+  # Use same mount as depth camera
+  mount:
+    position: [0.1, 0.0, 0.0]
+    orientation: [0.0, 0.0, 0.0]
+
+  ros2_topic: /camera/rgb
+  data_format: uint8
+  encoding: rgb8
+
+# IMU Sensor Configuration
+imu:
+  type: imu_6dof
+  enabled: true
+
+  # Sensor update rate
+  update_rate_hz: 100                    # Higher rate for IMU (downsampled to 20 Hz for logging)
+
+  # Measurement ranges
+  accelerometer:
+    range_g: 16                          # ±16g
+    noise_density: 0.002                 # m/s²/√Hz
+    bias_std: 0.01                       # m/s²
+    random_walk: 0.0001                  # m/s²/√s
+
+  gyroscope:
+    range_deg_s: 2000                    # ±2000 deg/s
+    noise_density: 0.0002                # rad/s/√Hz
+    bias_std: 0.001                      # rad/s
+    random_walk: 0.00001                 # rad/s/√s
+
+  # Mount configuration
+  mount:
+    position: [0.0, 0.0, 0.0]            # At drone center of mass
+    orientation: [0.0, 0.0, 0.0]         # Aligned with drone body frame
+
+  # Output
+  ros2_topic: /imu/data
+  data_format: sensor_msgs/Imu
+
+  # Logging
+  log_to_disk: true
+  log_path: ".\\data\\raw\\runtime\\sensors\\imu"
+  log_rate_hz: 20                        # Downsample for storage
+
+# Odometry Sensor Configuration
+odometry:
+  type: ground_truth_odom                # Phase 1: Use ground truth from simulator
+  enabled: true
+
+  # Sensor update rate
+  update_rate_hz: 20
+
+  # Noise model (light noise for semi-realistic behavior)
+  noise:
+    enabled: true
+    position_std_m: 0.01                 # 1 cm position noise
+    velocity_std_m_s: 0.05               # 5 cm/s velocity noise
+    orientation_std_rad: 0.005           # ~0.3 degree orientation noise
+
+  # Reference frame
+  reference_frame: world                 # Global frame
+  body_frame: base_link                  # Drone body frame
+
+  # Output
+  ros2_topic: /odom
+  data_format: nav_msgs/Odometry
+
+  # Logging
+  log_to_disk: true
+  log_path: ".\\data\\raw\\runtime\\sensors\\odom"
+
+# Future sensors (Phase 2+)
+lidar:
+  type: 3d_lidar
+  enabled: false                         # Not used in Phase 1-2
+
+barometer:
+  type: barometric_pressure
+  enabled: false                         # Optional for altitude estimation
+
+magnetometer:
+  type: magnetometer
+  enabled: false                         # Optional for heading estimation
+
+# Sensor synchronization
+synchronization:
+  method: software                       # Software-based timestamp sync
+  max_time_diff_s: 0.01                  # Maximum 10ms between sensor readings in a "frame"
+
+  # Timestamp source
+  use_simulation_time: true              # Use Isaac Sim simulation time
+
+# Data logging configuration
+logging:
+  enabled: true
+  base_path: ".\\data\\raw\\runtime\\sensors"
+
+  # Per-sensor logging (overridden by individual sensor configs)
+  default_compression: lz4
+  default_format: binary
+
+  # Global logging settings
+  buffer_size_mb: 100                    # Buffer before writing to disk
+  flush_interval_s: 5.0                  # Flush every 5 seconds
+
+  # Metadata
+  include_timestamps: true
+  include_sensor_config: true            # Store sensor config with each log
+  include_simulation_params: true        # Store sim params (dt, frame rate)
+
+# Sensor validation (for QC in Phase 5)
+validation:
+  enabled: true
+
+  # Thresholds for flagging invalid data
+  depth_camera:
+    max_invalid_pixels_percent: 20       # Flag frame if >20% pixels invalid
+    min_valid_depth_m: 0.1
+    max_valid_depth_m: 30.0
+
+  imu:
+    max_accel_g: 20                      # Flag if accel exceeds 20g
+    max_gyro_deg_s: 2500                 # Flag if gyro exceeds 2500 deg/s
+
+  odometry:
+    max_velocity_m_s: 35                 # Flag if velocity exceeds 35 m/s (above max design)
+    max_position_jump_m: 1.0             # Flag if position jumps >1m between frames
+
+notes:
+  - "All sensors configured for 20 Hz to match Phase 1 requirements"
+  - "Ground truth odometry used in Phase 1; switch to estimated odometry in Phase 2"
+  - "IMU runs at 100 Hz internally, downsampled to 20 Hz for logging"
+  - "Noise models are physics-based to prepare for sim-to-real (Phase 7)"
+  - "Sensor mounts assume quadrotor with forward-facing depth camera"
