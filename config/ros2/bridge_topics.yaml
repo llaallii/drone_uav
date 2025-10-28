@@ -4,9 +4,10 @@
 # Global bridge settings
 bridge:
   enabled: true
-  ros2_distribution: humble
-  domain_id: 0                           # ROS_DOMAIN_ID
+  ros2_distribution: jazzy               # Updated to Jazzy for Ubuntu 24.04
+  domain_id: 0                           # ROS_DOMAIN_ID (must match Docker container)
   use_sim_time: true                     # Use Isaac Sim time instead of wall time
+  node_name: isaac_sim_bridge            # ROS 2 node name (unused with native bridge)
 
   # Bridge behavior
   auto_start: true                       # Start bridge with simulation
@@ -230,3 +231,6 @@ notes:
   - "Clock topic uses best_effort QoS (standard for /clock)"
   - "TF tree published at 20 Hz to match sensor rate"
   - "Diagnostics for monitoring bridge health during long runs"
+  - "Bridge implementation uses Isaac Sim native isaacsim.ros2.bridge extension"
+  - "Communication with Docker container via DDS (FastDDS with UDP transport)"
+  - "Python version mismatch (3.11 host, 3.12 Docker) resolved by DDS middleware"

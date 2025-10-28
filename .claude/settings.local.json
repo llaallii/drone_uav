@@ -6,7 +6,12 @@
       "Bash(conda activate:*)",
       "Bash(python:*)",
       "Bash(pip show:*)",
-      "Read(//home/lali/Desktop/**)"
+      "Read(//home/lali/Desktop/**)",
+      "Bash(chmod:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__get-library-docs",
+      "Read(//home/lali/miniconda3/envs/drone_uav/lib/python3.11/site-packages/isaacsim/exts/isaacsim.ros2.bridge/config/**)",
+      "Read(//home/lali/miniconda3/envs/drone_uav/lib/python3.11/site-packages/isaacsim/exts/isaacsim.ros2.bridge/isaacsim/ros2/bridge/impl/og_shortcuts/**)"
     ],
     "deny": [],
     "ask": []

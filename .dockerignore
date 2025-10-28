@@ -1,0 +1,27 @@
+# Root-level Docker ignore file
+# Reduces build context size
+
+# Large directories
+IsaacLab/
+data/
+notebooks/
+
+# Git and version control
+.git/
+.gitignore
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.Python
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# Documentation
+*.md
+docs/

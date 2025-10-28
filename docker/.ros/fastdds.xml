@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+FastDDS Configuration for RAPID v2
+Enables UDP-only transport for Isaac Sim <-> Docker ROS 2 communication
+
+This configuration disables shared memory transport (which doesn't work across
+Docker boundaries) and forces UDP/IP for DDS discovery and data exchange.
+
+Usage:
+  export FASTRTPS_DEFAULT_PROFILES_FILE=/path/to/fastdds.xml
+
+Reference: IsaacLab docker/.ros/fastdds.xml
+-->
+<profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+
+    <!-- Transport Descriptors -->
+    <transport_descriptors>
+        <transport_descriptor>
+            <transport_id>UdpTransport</transport_id>
+            <type>UDPv4</type>
+        </transport_descriptor>
+    </transport_descriptors>
+
+    <!-- Default Participant Profile -->
+    <participant profile_name="udp_transport_profile" is_default_profile="true">
+        <rtps>
+            <!-- Use only UDP transport, disable shared memory -->
+            <userTransports>
+                <transport_id>UdpTransport</transport_id>
+            </userTransports>
+            <useBuiltinTransports>false</useBuiltinTransports>
+
+            <!-- DDS Discovery Configuration -->
+            <builtin>
+                <discovery_config>
+                    <!-- Use multicast for discovery -->
+                    <discoveryProtocol>SIMPLE</discoveryProtocol>
+                    <use_SIMPLE_EndpointDiscoveryProtocol>true</use_SIMPLE_EndpointDiscoveryProtocol>
+                    <use_STATIC_EndpointDiscoveryProtocol>false</use_STATIC_EndpointDiscoveryProtocol>
+
+                    <!-- Multicast settings -->
+                    <m_simpleEDP>
+                        <use_PublicationReaderANDSubscriptionWriter>true</use_PublicationReaderANDSubscriptionWriter>
+                        <use_PublicationWriterANDSubscriptionReader>true</use_PublicationWriterANDSubscriptionReader>
+                    </m_simpleEDP>
+
+                    <!-- Lease duration for participant discovery -->
+                    <leaseDuration>
+                        <sec>20</sec>
+                        <nanosec>0</nanosec>
+                    </leaseDuration>
+                    <leaseAnnouncement>
+                        <sec>10</sec>
+                        <nanosec>0</nanosec>
+                    </leaseAnnouncement>
+                </discovery_config>
+            </builtin>
+        </rtps>
+    </participant>
+
+</profiles>

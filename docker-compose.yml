@@ -1,0 +1,112 @@
+# Docker Compose configuration for RAPID v2
+#
+# Phase 1: Single ROS 2 service for bridge testing
+# Phase 2+: Can add fast_planner, rviz, and other services
+#
+# Usage:
+#   docker compose build                 # Build images
+#   docker compose up -d                 # Start in background
+#   docker compose logs -f rapid_ros2    # View logs
+#   docker compose down                  # Stop and remove
+
+version: "3.8"
+
+services:
+  rapid_ros2:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.ros2
+    container_name: rapid_ros2
+    hostname: rapid-ros2-jazzy
+
+    # Use host network for simplest ROS 2 DDS communication
+    # This allows direct communication with Isaac Sim on the host
+    network_mode: "host"
+
+    # Environment variables
+    environment:
+      - DISPLAY=${DISPLAY}
+      - ROS_DOMAIN_ID=0
+      - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+      - FASTRTPS_DEFAULT_PROFILES_FILE=/root/.ros/fastdds.xml
+      - ROS_DISTRO=jazzy
+      - ROS_LOCALHOST_ONLY=0
+
+    # Volume mounts
+    volumes:
+      # X11 for GUI apps (rviz2, etc.)
+      - /tmp/.X11-unix:/tmp/.X11-unix
+
+      # ROS 2 workspace (for custom packages in Phase 2+)
+      - ~/ros2_ws:/root/ros2_ws
+
+      # Project directories
+      - ./src:/workspace/src:ro              # Source code (read-only)
+      - ./config:/workspace/config:ro        # Configuration (read-only)
+      - ./data:/workspace/data               # Data logs and datasets (read-write)
+
+      # DDS configuration
+      - ./docker/.ros/fastdds.xml:/root/.ros/fastdds.xml:ro
+
+    # Health check: verify ROS 2 daemon is running
+    healthcheck:
+      test: ["CMD", "ros2", "topic", "list"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Resource limits (optional, adjust based on your hardware)
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '4.0'
+    #       memory: 8G
+    #     reservations:
+    #       cpus: '2.0'
+    #       memory: 4G
+
+    # Command: Keep container running for Phase 1
+    # In Phase 2+, this will launch planner/controller nodes
+    command: tail -f /dev/null
+
+# ============================================================================
+# Future Services (Phase 2+)
+# ============================================================================
+
+  # fast_planner:
+  #   build:
+  #     context: .
+  #     dockerfile: docker/Dockerfile.planner
+  #   depends_on:
+  #     - rapid_ros2
+  #   network_mode: "host"
+  #   environment:
+  #     - ROS_DOMAIN_ID=0
+  #     - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+  #   command: ros2 launch fast_planner planner.launch.py
+
+  # rviz:
+  #   build:
+  #     context: .
+  #     dockerfile: docker/Dockerfile.ros2
+  #   depends_on:
+  #     - rapid_ros2
+  #   network_mode: "host"
+  #   environment:
+  #     - DISPLAY=${DISPLAY}
+  #     - ROS_DOMAIN_ID=0
+  #   volumes:
+  #     - /tmp/.X11-unix:/tmp/.X11-unix
+  #   command: rviz2
+
+# ============================================================================
+# Networks (if not using host mode)
+# ============================================================================
+
+# networks:
+#   rapid_net:
+#     driver: bridge

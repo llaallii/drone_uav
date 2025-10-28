@@ -1,0 +1,73 @@
+# Docker ignore file for RAPID v2
+# Excludes unnecessary files from Docker build context
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Isaac Sim / Isaac Lab
+IsaacLab/
+*.usd
+*.usda
+*.usdc
+
+# Data directories (will be mounted as volumes)
+data/
+logs/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Documentation
+docs/
+*.md
+README*
+
+# Test results
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# ROS build artifacts
+install/
+build/
+log/
+devel/
+
+# Temporary files
+*.tmp
+temp/

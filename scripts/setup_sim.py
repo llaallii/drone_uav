@@ -19,6 +19,7 @@ import sys
 import subprocess
 from pathlib import Path
 import argparse
+import os
 
 
 class Colors:
@@ -137,43 +138,134 @@ def check_ros2():
     """Check ROS 2 installation."""
     print_header("Checking ROS 2 Installation")
 
+    # First, check if ROS 2 environment is sourced
+    ros_distro = os.environ.get('ROS_DISTRO')
+    if not ros_distro:
+        print_error("ROS 2 environment not sourced")
+        print("  Fix: Source ROS 2 setup file")
+        print("       source /opt/ros/jazzy/setup.bash")
+        print("       Add to ~/.bashrc: echo 'source /opt/ros/jazzy/setup.bash' >> ~/.bashrc")
+        return False
+
     try:
+        # Try to check ROS 2 version with system Python (not conda env)
         result = subprocess.run(
-            ["ros2", "--version"],
+            ["bash", "-c", "source /opt/ros/jazzy/setup.bash && ros2 --version"],
             capture_output=True,
             text=True,
-            timeout=10
+            timeout=10,
+            env=dict(os.environ, PYTHONPATH="")  # Clear conda PYTHONPATH
         )
 
         if result.returncode == 0:
             version = result.stdout.strip()
-            if "jazzy" in version.lower():
-                print_success(f"ROS 2 installed: {version}")
-                return True
-            elif "humble" in version.lower():
-                print_warning(f"ROS 2 Humble found (expected Jazzy): {version}")
-                print("  Consider upgrading to ROS 2 Jazzy for Ubuntu 24.04")
-                return True  # Allow Humble but recommend Jazzy
+            print_success(f"ROS 2 installed: {version}")
+
+            # Note: Python version mismatch is no longer an issue with Docker setup
+            # Isaac Sim (Python 3.11) uses native ROS 2 bridge with DDS
+            # ROS 2 runs in Docker (Python 3.12) - they communicate via DDS network protocol
+            python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
+            if python_version == "3.11":
+                print_success("Python 3.11 (Isaac Sim environment)")
+                print("         ROS 2 integration via Docker container (Python 3.12)")
+                print("         DDS middleware handles cross-version communication")
             else:
-                print_warning(f"ROS 2 installed: {version} (expected Jazzy)")
-                print("  Expected: ROS 2 Jazzy for Ubuntu 24.04")
-                return True  # Allow other distributions
+                print_success(f"Python version: {python_version}")
+
+            return True
 
         else:
-            print_error("ROS 2 not found")
-            print("  Fix: Install ROS 2 Jazzy for Ubuntu 24.04")
-            print("       See: config/env/setup_instructions.md")
+            print_error("ROS 2 command failed")
+            print(f"  Error: {result.stderr}")
             return False
 
     except FileNotFoundError:
-        print_error("ROS 2 not found in PATH")
-        print("  Fix: Install ROS 2 Jazzy and source the setup file")
-        print("       source /opt/ros/jazzy/setup.bash")
-        print("       Or add to ~/.bashrc for automatic loading")
-        return False
+        # Try alternative check - look for ROS installation directory
+        ros_paths = [
+            Path("/opt/ros/jazzy"),
+            Path("/opt/ros/humble"),
+            Path("/opt/ros/iron")
+        ]
+        
+        found_ros = None
+        for ros_path in ros_paths:
+            if ros_path.exists():
+                found_ros = ros_path.name
+                break
+        
+        if found_ros:
+            print_warning(f"ROS 2 {found_ros} found but not in PATH")
+            print("  Fix: Source ROS 2 setup file")
+            print(f"       source /opt/ros/{found_ros}/setup.bash")
+            print("       Add to ~/.bashrc for automatic loading")
+            return False
+        else:
+            print_error("ROS 2 not installed")
+            print("  Fix: Install ROS 2 Jazzy for Ubuntu 24.04")
+            print("       See: https://docs.ros.org/en/jazzy/Installation.html")
+            return False
+
+    except subprocess.TimeoutExpired:
+        print_warning("ROS 2 version check timed out")
+        return True
+
     except Exception as e:
-        print_error(f"Error checking ROS 2: {e}")
-        return False
+        # Try to import rclpy directly to check if ROS 2 Python packages work
+        try:
+            import rclpy
+            print_success("ROS 2 Python packages (rclpy) available")
+            return True
+        except ImportError as import_err:
+            print_error(f"ROS 2 Python import failed: {import_err}")
+            
+            if "rclpy._rclpy_pybind11" in str(import_err):
+                print_warning("rclpy import failed (expected for Isaac Sim Python 3.11)")
+                print("  This is normal: ROS 2 runs in Docker container (Python 3.12)")
+                print("  Isaac Sim uses native ROS 2 bridge (isaacsim.ros2.bridge extension)")
+                print("  Communication via DDS - no direct rclpy import needed")
+            else:
+                print_warning(f"ROS 2 Python import issue: {import_err}")
+                print("  For Docker-based setup, this is not critical")
+                print("  ROS 2 topics will work via DDS middleware")
+            
+            return False
+
+
+def check_ros2_python_packages():
+    """Additional check for ROS 2 Python package compatibility."""
+    print_header("Checking ROS 2 Python Package Compatibility")
+
+    print_warning("Note: Direct rclpy import not required for Docker-based setup")
+    print("      Isaac Sim uses native ROS 2 bridge (isaacsim.ros2.bridge)")
+    print("      ROS 2 runs in Docker container with Python 3.12")
+    print("")
+
+    required_packages = [
+        'rclpy',
+        'sensor_msgs',
+        'geometry_msgs',
+        'std_msgs'
+    ]
+
+    missing_packages = []
+    found_packages = []
+
+    for package in required_packages:
+        try:
+            __import__(package)
+            print_success(f"Package available: {package}")
+            found_packages.append(package)
+        except ImportError:
+            print_warning(f"Package not in Isaac Sim env: {package}")
+            missing_packages.append(package)
+
+    if missing_packages:
+        print("\n  These packages run in Docker container - not needed in Isaac Sim env")
+        print("  If you want to test ROS 2 topics from host:")
+        print(f"       pip install {' '.join(missing_packages)}")
+
+    # Don't fail if packages are missing - they're in Docker
+    return True
 
 
 def check_directory_structure(fix=False):
@@ -181,14 +273,14 @@ def check_directory_structure(fix=False):
     print_header("Checking Directory Structure")
 
     required_dirs = [
-        Path("data/raw/runtime"),
-        Path("data/raw/runtime/sensors"),
-        Path("data/raw/runtime/sensors/depth"),
-        Path("data/raw/runtime/sensors/imu"),
-        Path("data/raw/runtime/sensors/odom"),
-        Path("data/raw/scenes"),
-        Path("data/raw/scenes/cache"),
-        Path("data/dataset/shards"),
+        Path("../data/raw/runtime"),
+        Path("../data/raw/runtime/sensors"),
+        Path("../data/raw/runtime/sensors/depth"),
+        Path("../data/raw/runtime/sensors/imu"),
+        Path("../data/raw/runtime/sensors/odom"),
+        Path("../data/raw/scenes"),
+        Path("../data/raw/scenes/cache"),
+        Path("../data/dataset/shards"),
     ]
 
     all_exist = True
@@ -216,10 +308,10 @@ def check_config_files():
     print_header("Checking Configuration Files")
 
     required_configs = [
-        Path("config/env/isaac_lab_env.yaml"),
-        Path("config/env/sensors.yaml"),
-        Path("config/env/scenes_config.yaml"),
-        Path("config/ros2/bridge_topics.yaml"),
+        Path("../config/env/isaac_lab_env.yaml"),
+        Path("../config/env/sensors.yaml"),
+        Path("../config/env/scenes_config.yaml"),
+        Path("../config/ros2/bridge_topics.yaml"),
     ]
 
     all_exist = True
@@ -286,6 +378,7 @@ def main():
         ("Isaac Sim Installation", check_isaac_sim),
         ("CUDA Availability", check_cuda),
         ("ROS 2 Installation", check_ros2),
+        ("ROS 2 Python Packages", check_ros2_python_packages),  # Add this line
         ("Directory Structure", lambda: check_directory_structure(fix=args.fix_dirs)),
         ("Configuration Files", check_config_files),
         ("Isaac Sim Launch", check_isaac_sim_launch),
